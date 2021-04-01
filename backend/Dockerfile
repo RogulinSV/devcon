@@ -72,14 +72,14 @@ RUN set -eux; \
         libaio1 \
         libzip-dev \
         libargon2-dev \
-		libcurl4-openssl-dev \
-		libedit-dev \
+        libcurl4-openssl-dev \
+        libedit-dev \
         libc-client-dev \
         libldb-dev \
         libldap2-dev \
-		libsodium-dev \
-		libsqlite3-dev \
-		libxml2-dev \
+        libsodium-dev \
+        libsqlite3-dev \
+        libxml2-dev \
         libkrb5-dev \
         libbz2-dev \
         libffi-dev \
@@ -96,9 +96,8 @@ RUN set -eux; \
         librabbitmq-dev \
 # >> NGINX
         libxslt-dev \
-        libpq-dev;
+        libpq-dev; \
 # DOWNLOADING SOURCES...
-RUN set -eux; \
     echo "${BLU}DOWNLOADING SOURCES...${RES}"; \
     wget -O /tmp/php-${PHP_VERSION}.tar.gz https://www.php.net/distributions/php-${PHP_VERSION}.tar.gz; \
     wget -O /tmp/instantclient-basic-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-basic-linux.${ORACLE_CLIENT_VERSION}.zip; \
@@ -115,18 +114,17 @@ RUN set -eux; \
     git clone --branch ${PHP_EXTENSION_AMQP_BRANCH} --depth 1 https://github.com/php-amqp/php-amqp.git /tmp/amqp; \
 # UNPACKING SOURCES...
     echo "${BLU}UNPACKING SOURCES...${RES}"; \
-    tar -zvxf /tmp/php-${PHP_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/php-${PHP_VERSION}.tar.gz -C /tmp; \
     mkdir -p /usr/lib/oracle; \
     unzip /tmp/instantclient-basic-linux.${ORACLE_CLIENT_VERSION}.zip -d /usr/lib/oracle; \
     unzip /tmp/instantclient-sqlplus-linux.${ORACLE_CLIENT_VERSION}.zip -d /usr/lib/oracle; \
     unzip /tmp/instantclient-sdk-linux.${ORACLE_CLIENT_VERSION}.zip -d /usr/lib/oracle; \
     unzip /tmp/instantclient-jdbc-linux.${ORACLE_CLIENT_VERSION}.zip -d /usr/lib/oracle; \
     unzip /tmp/instantclient-odbc-linux.${ORACLE_CLIENT_VERSION}.zip -d /usr/lib/oracle; \
-    tar -zvxf /tmp/node-${NODE_VERSION}.tar.gz -C /tmp; \
-    tar -zvxf /tmp/mozjpeg-${MOZJPEG_VERSION}.tar.gz -C /tmp; \
-    tar -zvxf /tmp/gifsicle-${GIFSICLE_VERSION}.tar.gz -C /tmp;
+    tar -zxf /tmp/node-${NODE_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/mozjpeg-${MOZJPEG_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/gifsicle-${GIFSICLE_VERSION}.tar.gz -C /tmp; \
 # COMPILING PHP...
-RUN set -eux; \
     echo "${BLU}COMPILING PHP...${RES}"; \
     ln -s /usr/lib/libc-client.a /usr/lib/x86_64-linux-gnu/libc-client.a; \
     ln -s /usr/lib/libc-client.so /usr/lib/x86_64-linux-gnu/libc-client.so; \
@@ -189,9 +187,8 @@ RUN set -eux; \
         --with-zlib \
         --with-zlib-dir; \
     make -j$(nproc); \
-    make install;
+    make install; \
 # COMPILING PHP EXTENSIONS...
-RUN set -eux; \
     echo "${BLU}COMPILING PHP EXTENSIONS...${RES}"; \
     mkdir -p /etc/php/conf.d/; \
     cd /tmp/php-${PHP_VERSION}/ext/oci8; \
@@ -278,9 +275,8 @@ RUN set -eux; \
         --enable-mysqlnd; \
     make -j$(nproc); \
     make install; \
-    echo 'extension=swoole' > /etc/php/conf.d/php-ext-swoole.ini;
+    echo 'extension=swoole' > /etc/php/conf.d/php-ext-swoole.ini; \
 # CONFIGURING PHP...
-RUN set -eux; \
     echo "${BLU}CONFIGURING PHP...${RES}"; \
     ln -s /usr/etc/php-fpm.d /etc/php/php-fpm.d; \
     { \
@@ -309,9 +305,8 @@ RUN set -eux; \
     php /tmp/composer-installer.php --install-dir=/usr/local/bin --filename=composer; \
 # SMOKE TEST
     echo "${BLU}CHECKING COMPOSER...${RES}"; \
-    composer --version;
+    composer --version; \
 # COMPILING NODEJS...
-RUN set -eux; \
     echo "${BLU}COMPILING NODEJS...${RES}"; \
     addgroup --system --gid 1000 node; \
     adduser --system --disabled-login --ingroup node --no-create-home --home /nonexistent --gecos "node user" --shell /bin/false --uid 1000 node; \
@@ -326,9 +321,8 @@ RUN set -eux; \
     echo "${BLU}CHECKING NODEJS...${RES}"; \
     node --version; \
     npm --version; \
-    npx --version;
+    npx --version; \
 # COMPILING MOJZPEG...    
-RUN set -eux; \
     echo "${BLU}COMPILING MOJZPEG...${RES}"; \
     cd /tmp/mozjpeg-${MOZJPEG_VERSION}; \
     mkdir build; \
@@ -386,7 +380,21 @@ COPY config/supervisord.conf /etc/supervisord.conf
 COPY scripts/start.sh /start.sh
 COPY scripts/prefix.sh /prefix.sh
 
+# CONFIGURING SUPERVISOR...
+RUN set -eux; \
+    echo "${BLU}CONFIGURING SUPERVISOR...${RES}"; \
+    mkdir -p /etc/supervisor/conf.d/; \
+# CONFIGURING MSMTP...
+    echo "${BLU}CONFIGURING MSMTP...${RES}"; \
+    touch /var/log/msmtp.log; \
+    chown www-data:www-data /var/log/msmtp.log; \
+# CONFIGURING STARTUP SCRIPTS...
+    echo "${BLU}CONFIGURING STARTUP SCRIPTS...${RES}"; \
+    chmod 755 /start.sh; \
+    chmod 755 /prefix.sh
+
 EXPOSE 8025 9002
+VOLUME /var/mailhog
 VOLUME /var/www
 
 WORKDIR "/var/www"
