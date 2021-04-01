@@ -9,6 +9,7 @@ ARG NGINX_MODULE_LUA_VERSION=0.10.19
 ARG NGINX_MODULE_NJS_VERSION=0.5.2
 ARG NGINX_MODULE_GEO_VERSION=3.3
 ARG NGINX_MODULE_RTMP_VERSION=1.2.1
+ARG LUA_VERSION=5.1
 ARG LUAJIT_MAJOR_VERSION=2
 ARG LUAJIT_MINOR_VERSION=1
 ARG LUAJIT_RELEASE_VERSION=20201229
@@ -22,7 +23,7 @@ ARG OPENRESTY_MODULE_SETMISC_VERSION=0.32
 # INSTALLING PACKAGES...
 RUN set -eux; \
     echo "${BLU}INSTALLING PACKAGES...${RES}"; \
-    apt-get -o Acquire::Max-FutureTime=145400 update; \
+    apt-get update; \
     apt-get install --no-install-recommends --no-install-suggests -y \
 # UTILS...
         wget \
@@ -54,14 +55,14 @@ RUN set -eux; \
     wget -O /tmp/openresty-${OPENRESTY_VERSION}.tar.gz https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz; \
 # UNPACKING SOURCES...
     echo "${BLU}UNPACKING SOURCES...${RES}"; \
-    tar -zvxf /tmp/nginx-${NGINX_VERSION}.tar.gz -C /tmp; \
-    tar -zvxf /tmp/nginx-module-ngx-${NGINX_MODULE_NGX_VERSION}.tar.gz -C /tmp; \
-    tar -zvxf /tmp/nginx-module-lua-${NGINX_MODULE_LUA_VERSION}.tar.gz -C /tmp; \
-    tar -zvxf /tmp/nginx-module-njs-${NGINX_MODULE_NJS_VERSION}.tar.gz -C /tmp; \
-    tar -zvxf /tmp/nginx-module-geo-${NGINX_MODULE_GEO_VERSION}.tar.gz -C /tmp; \
-    tar -zvxf /tmp/nginx-module-rtmp-${NGINX_MODULE_RTMP_VERSION}.tar.gz -C /tmp; \
-    tar -zvxf /tmp/luajit-${LUAJIT_MAJOR_VERSION}.${LUAJIT_MINOR_VERSION}-${LUAJIT_RELEASE_VERSION}.tar.gz -C /tmp; \
-    tar -zvxf /tmp/openresty-${OPENRESTY_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/nginx-${NGINX_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/nginx-module-ngx-${NGINX_MODULE_NGX_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/nginx-module-lua-${NGINX_MODULE_LUA_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/nginx-module-njs-${NGINX_MODULE_NJS_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/nginx-module-geo-${NGINX_MODULE_GEO_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/nginx-module-rtmp-${NGINX_MODULE_RTMP_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/luajit-${LUAJIT_MAJOR_VERSION}.${LUAJIT_MINOR_VERSION}-${LUAJIT_RELEASE_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/openresty-${OPENRESTY_VERSION}.tar.gz -C /tmp; \
 # COMPILING LUAJIT...
     echo "${BLU}COMPILING LUAJIT...${RES}"; \
     cd /tmp/luajit${LUAJIT_MAJOR_VERSION}-${LUAJIT_MAJOR_VERSION}.${LUAJIT_MINOR_VERSION}-${LUAJIT_RELEASE_VERSION}; \
@@ -170,6 +171,18 @@ COPY config/nginx-available.conf /etc/nginx/sites-available/default.conf
 COPY config/supervisord.conf /etc/supervisord.conf
 COPY scripts/start.sh /start.sh
 COPY scripts/prefix.sh /prefix.sh
+
+# CONFIGURING SUPERVISOR...
+RUN set -eux; \
+    echo "${BLU}CONFIGURING SUPERVISOR...${RES}"; \
+    mkdir -p /etc/supervisor/conf.d/; \
+# CONFIGURING NGINX...
+    echo "${BLU}CONFIGURING NGINX...${RES}"; \
+    ln -s /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/default.conf; \
+# CONFIGURING STARTUP SCRIPTS...
+    echo "${BLU}CONFIGURING STARTUP SCRIPTS...${RES}"; \
+    chmod 755 /start.sh; \
+    chmod 755 /prefix.sh;
 
 EXPOSE 80 443 9001
 VOLUME /var/www
