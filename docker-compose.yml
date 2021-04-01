@@ -1,0 +1,31 @@
+version: '3.7'
+
+networks:
+    circle-9:
+
+services:
+    frontend:
+        build:
+            context: ./frontend
+        container_name: frontend
+        volumes:
+            - ./www:/var/www
+        ports:
+            - 8080:80
+            - 8443:443
+            - 9001:9001
+        links:
+            - backend
+        networks:
+            - circle-9
+    backend:
+        build:
+            context: ./backend
+        container_name: backend
+        volumes:
+            - ./www:/var/www
+        ports:
+            - 8025:8025
+            - 9002:9002
+        networks:
+            - circle-9
