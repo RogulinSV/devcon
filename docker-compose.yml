@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.8'
 
 networks:
     circle-9:
@@ -10,6 +10,7 @@ services:
         container_name: frontend
         volumes:
             - ./www:/var/www
+            - ./log/nginx:/var/log/nginx
         ports:
             - 8080:80
             - 8443:443
@@ -22,8 +23,13 @@ services:
         build:
             context: ./backend
         container_name: backend
+        environment:
+            XDEBUG_CONFIG: "client_host=host.docker.internal client_port=9003 idekey=PHPSTORM"
         volumes:
             - ./www:/var/www
+            - ./cache/mailhog:/var/mailhog
+            - ./log/php:/var/log/php
+            - ./log/node:/var/log/node
         ports:
             - 8025:8025
             - 9002:9002
