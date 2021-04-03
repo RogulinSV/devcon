@@ -136,23 +136,23 @@ RUN set -eux; \
     make install; \
 # CONFIGURING NGINX...
     echo "${BLU}CONFIGURING NGINX...${RES}"; \
-    rm -rf /etc/nginx/html/; \
-    mkdir /etc/nginx/conf.d/; \
-    mkdir /etc/nginx/sites-available/; \
-    mkdir /etc/nginx/sites-enabled/; \
-    mkdir /etc/nginx/ssl/; \
-    mkdir -p /usr/share/nginx/html/; \
-    mkdir /var/cache/nginx/; \
-    chown nginx:nginx /var/cache/nginx/; \
+    rm -rf /etc/nginx/html; \
+    mkdir /etc/nginx/conf.d; \
+    mkdir /etc/nginx/sites-available; \
+    mkdir /etc/nginx/sites-enabled; \
+    mkdir /etc/nginx/ssl; \
+    mkdir -p /usr/share/nginx/html; \
+    mkdir /var/cache/nginx; \
+    chown nginx:nginx /var/cache/nginx; \
     install -m644 /tmp/nginx-${NGINX_VERSION}/html/index.html /usr/share/nginx/html/; \
     install -m644 /tmp/nginx-${NGINX_VERSION}/html/50x.html /usr/share/nginx/html/; \
     install -m755 /tmp/nginx-${NGINX_VERSION}/objs/nginx /usr/sbin/nginx; \
     ln -s /usr/lib/nginx/modules /etc/nginx/modules; \
     ls /usr/lib/nginx/modules | grep -v debug | xargs -I {} echo 'load_module "modules/{}";' >> /etc/nginx/modules.conf; \
-    mkdir -p /usr/local/share/lua/${LUA_VERSION}/resty/; \
+    mkdir -p /usr/local/share/lua/${LUA_VERSION}/resty; \
     cp -R /tmp/openresty-${OPENRESTY_VERSION}/bundle/lua-resty-*/lib/resty/* /usr/local/share/lua/${LUA_VERSION}/resty/; \
-    ln -sf /dev/stdout /var/log/nginx/access.log; \
-    ln -sf /dev/stderr /var/log/nginx/error.log; \
+    mkdir -p /var/log/nginx; \
+    chown nginx:nginx /var/log/nginx; \
 # SMOKE TEST
     echo "${BLU}CHECKING NGINX...${RES}"; \
     nginx -v; \
@@ -166,8 +166,8 @@ RUN set -eux; \
         make; \
     rm -rf /tmp/*;
 
-COPY config/nginx.conf /etc/nginx/nginx.conf
-COPY config/nginx-available.conf /etc/nginx/sites-available/default.conf
+COPY config/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY config/nginx/sites-available/default.conf /etc/nginx/sites-available/default.conf
 COPY config/supervisord.conf /etc/supervisord.conf
 COPY scripts/start.sh /start.sh
 COPY scripts/prefix.sh /prefix.sh
@@ -186,6 +186,7 @@ RUN set -eux; \
 
 EXPOSE 80 443 9001
 VOLUME /var/www
+VOLUME /var/log/nginx
 
 WORKDIR "/var/www"
 CMD ["/start.sh"]
