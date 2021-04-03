@@ -287,16 +287,27 @@ RUN set -eux; \
     { \
         echo 'sendmail_path=/usr/bin/msmtp -t'; \
     } > /etc/php/conf.d/php-ext-sendmail.ini; \
+    { \
+        echo; \
+        echo 'xdebug.mode=debug'; \
+        echo 'xdebug.client_host=host.docker.internal'; \
+        echo 'xdebug.client_port=9003'; \
+        echo 'xdebug.log=/var/log/php/xdebug.log'; \
+        echo 'xdebug.log_level=7'; \
+        echo 'xdebug.output_dir=/var/log/php/cachegrind'; \
+        echo 'xdebug.profiler_output_name=cachegrind.out.%s'; \
+    } >> /etc/php/conf.d/php-ext-xdebug.ini; \
     mkdir -p /var/log/php; \
     touch /var/log/php/access.log; \
     chown www-data:www-data /var/log/php/access.log; \
-    ln -sf /dev/stdout /var/log/php/access.log; \
     touch /var/log/php/error.log; \
     chown www-data:www-data /var/log/php/error.log; \
-    ln -sf /dev/stderr /var/log/php/error.log; \
     touch /var/log/php/slow.log; \
     chown www-data:www-data /var/log/php/slow.log; \
-    ln -sf /dev/stderr /var/log/php/slow.log; \
+    touch /var/log/php/xdebug.log; \
+    chown www-data:www-data /var/log/php/xdebug.log; \
+    mkdir -p /var/log/php/cachegrind; \
+    chown www-data:www-data /var/log/php/cachegrind; \
 # SMOKE TEST
     echo "${BLU}CHECKING PHP...${RES}"; \
     php --version; \
@@ -317,6 +328,10 @@ RUN set -eux; \
     make -j$(nproc); \
     make install; \
     ln -s /usr/local/bin/node /usr/local/bin/nodejs; \
+# CONFIGURING NODEJS...
+    echo "${BLU}CONFIGURING NODEJS...${RES}"; \
+    mkdir -p /var/log/node; \
+    chown www-data:www-data /var/log/node; \
 # SMOKE TEST
     echo "${BLU}CHECKING NODEJS...${RES}"; \
     node --version; \
@@ -371,12 +386,13 @@ RUN set -eux; \
     npm cache clean --force; \
     rm -rf /tmp/*;
 
-COPY config/php.ini /etc/php/php.ini
-COPY config/php-fpm.conf /usr/etc/php-fpm.conf
-COPY config/php-fpm-flags.conf /etc/php/php-fpm.d/php-fpm-flags.conf
-COPY config/php-ext-xdebug.ini /etc/php/conf.d/php-ext-xdebug.ini
+COPY config/php/php.ini /etc/php/php.ini
+COPY config/php/php-fpm.conf /usr/etc/php-fpm.conf
+COPY config/php/php-fpm.d/* /etc/php/php-fpm.d/
+COPY config/php/conf.d/* /etc/php/conf.d/
 COPY config/msmtprc /etc/msmtprc
-COPY config/supervisord.conf /etc/supervisord.conf
+COPY config/supervisord/supervisord.conf /etc/supervisord.conf
+COPY config/supervisord/conf.d/* /etc/supervisor/conf.d/
 COPY scripts/start.sh /start.sh
 COPY scripts/prefix.sh /prefix.sh
 
@@ -396,6 +412,9 @@ RUN set -eux; \
 EXPOSE 8025 9002
 VOLUME /var/mailhog
 VOLUME /var/www
+VOLUME /var/log/php
+VOLUME /var/log/node
+# VOLUME /var/log/profiler
 
 WORKDIR "/var/www"
 CMD ["/start.sh"]

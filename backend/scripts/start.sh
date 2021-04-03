@@ -20,19 +20,22 @@ $(which composer) global require \
 echo "DOWNLOADING PHP PACKAGES..."
 wget -O /usr/local/bin/phploc https://phar.phpunit.de/phploc.phar \
     && chmod +x /usr/local/bin/phploc
-wget -O /usr/local/bin/phpchck https://get.sensiolabs.org/security-checker.phar \
+wget -O /usr/local/bin/phpchck https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64 \
     && chmod +x /usr/local/bin/phpchck
-
-echo "UPGRADING NODEJS PACKAGES..."
-$(which npm) upgrade --global \
-    npm
 
 echo "INSTALLING NODEJS PACKAGES..."
 $(which npm) install --global \
     yarn \
     svgo \
+    nodemon \
     typescript \
     @types/node
+
+echo "CHANGING PERMISSIONS..."
+touch /var/log/node/tsc.log
+chown www-data:www-data /var/log/node/tsc.log
+chown www-data:www-data /var/log/php/*
+chown -R www-data:www-data /var/www
 
 echo "STARTING SUPERVISORD..."
 exec /usr/bin/supervisord -n -c /etc/supervisord.conf
