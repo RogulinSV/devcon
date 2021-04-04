@@ -24,3 +24,4 @@ $> apt-get -o Acquire::Max-FutureTime=145400 update
  * [PHP Extensions compatibility list](https://blog.remirepo.net/post/2020/09/21/PHP-extensions-status-with-upcoming-PHP-8.0)
  * [Xdebug Settings](https://xdebug.org/docs/all_settings)
  * [Xdebug with PHPStorm](https://www.jetbrains.com/help/phpstorm/configuring-xdebug.html)
+ * [TypeScript Book](https://basarat.gitbook.io/typescript/)
