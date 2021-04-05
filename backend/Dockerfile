@@ -99,19 +99,19 @@ RUN set -eux; \
         libpq-dev; \
 # DOWNLOADING SOURCES...
     echo "${BLU}DOWNLOADING SOURCES...${RES}"; \
-    wget -O /tmp/php-${PHP_VERSION}.tar.gz https://www.php.net/distributions/php-${PHP_VERSION}.tar.gz; \
-    wget -O /tmp/instantclient-basic-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-basic-linux.${ORACLE_CLIENT_VERSION}.zip; \
-    wget -O /tmp/instantclient-sqlplus-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-sqlplus-linux.${ORACLE_CLIENT_VERSION}.zip; \
-    wget -O /tmp/instantclient-sdk-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-sdk-linux.${ORACLE_CLIENT_VERSION}.zip; \
-    wget -O /tmp/instantclient-jdbc-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-jdbc-linux.${ORACLE_CLIENT_VERSION}.zip; \
-    wget -O /tmp/instantclient-odbc-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-odbc-linux.${ORACLE_CLIENT_VERSION}.zip; \
-    wget -O /tmp/composer-installer.php https://getcomposer.org/installer; \
-    wget -O /tmp/node-${NODE_VERSION}.tar.gz https://github.com/nodejs/node/archive/v${NODE_VERSION}.tar.gz; \
-    wget -O /tmp/mozjpeg-${MOZJPEG_VERSION}.tar.gz https://github.com/mozilla/mozjpeg/archive/v${MOZJPEG_VERSION}.tar.gz; \
-    wget -O /tmp/gifsicle-${GIFSICLE_VERSION}.tar.gz https://github.com/kohler/gifsicle/archive/v${GIFSICLE_VERSION}.tar.gz; \
-    wget -O /tmp/mailhog https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64; \
-    git clone --branch ${PHP_EXTENSION_IMAGICK_BRANCH} --depth 1 https://github.com/Imagick/imagick /tmp/imagick; \
-    git clone --branch ${PHP_EXTENSION_AMQP_BRANCH} --depth 1 https://github.com/php-amqp/php-amqp.git /tmp/amqp; \
+    wget --no-check-certificate -O /tmp/php-${PHP_VERSION}.tar.gz https://www.php.net/distributions/php-${PHP_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/instantclient-basic-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-basic-linux.${ORACLE_CLIENT_VERSION}.zip; \
+    wget --no-check-certificate -O /tmp/instantclient-sqlplus-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-sqlplus-linux.${ORACLE_CLIENT_VERSION}.zip; \
+    wget --no-check-certificate -O /tmp/instantclient-sdk-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-sdk-linux.${ORACLE_CLIENT_VERSION}.zip; \
+    wget --no-check-certificate -O /tmp/instantclient-jdbc-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-jdbc-linux.${ORACLE_CLIENT_VERSION}.zip; \
+    wget --no-check-certificate -O /tmp/instantclient-odbc-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-odbc-linux.${ORACLE_CLIENT_VERSION}.zip; \
+    wget --no-check-certificate -O /tmp/composer-installer.php https://getcomposer.org/installer; \
+    wget --no-check-certificate -O /tmp/node-${NODE_VERSION}.tar.gz https://github.com/nodejs/node/archive/v${NODE_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/mozjpeg-${MOZJPEG_VERSION}.tar.gz https://github.com/mozilla/mozjpeg/archive/v${MOZJPEG_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/gifsicle-${GIFSICLE_VERSION}.tar.gz https://github.com/kohler/gifsicle/archive/v${GIFSICLE_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/mailhog https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64; \
+    git clone -c http.sslVerify=false --branch ${PHP_EXTENSION_IMAGICK_BRANCH} --depth 1 https://github.com/Imagick/imagick /tmp/imagick; \
+    git clone -c http.sslVerify=false --branch ${PHP_EXTENSION_AMQP_BRANCH} --depth 1 https://github.com/php-amqp/php-amqp.git /tmp/amqp; \
 # UNPACKING SOURCES...
     echo "${BLU}UNPACKING SOURCES...${RES}"; \
     tar -zxf /tmp/php-${PHP_VERSION}.tar.gz -C /tmp; \
@@ -315,7 +315,7 @@ RUN set -eux; \
     php --version; \
 # INSTALLING COMPOSER...
     echo "${BLU}INSTALLING COMPOSER...${RES}"; \
-    php /tmp/composer-installer.php --install-dir=/usr/local/bin --filename=composer; \
+    php /tmp/composer-installer.php --disable-tls --install-dir=/usr/local/bin --filename=composer; \
 # SMOKE TEST
     echo "${BLU}CHECKING COMPOSER...${RES}"; \
     composer --version; \

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+echo "DISABLING COMPOSER SECURITY..."
+mkdir -p /root/.composer;
+echo '{ "config": { "disable-tls": true, "secure-http": false }, "repositories": [{ "packagist": false }, { "type": "composer", "url": "http://packagist.org" }] }' > /root/.composer/config.json
+
 if [ -f "/var/www/composer.json" ]; then
     echo "INSTALLING COMPOSER DEPENDENCIES..."
     $(which composer) install --working-dir=/var/www
@@ -18,9 +22,9 @@ $(which composer) global require \
     squizlabs/php_codesniffer
 
 echo "DOWNLOADING PHP PACKAGES..."
-wget -O /usr/local/bin/phploc https://phar.phpunit.de/phploc.phar \
+wget --no-check-certificate -O /usr/local/bin/phploc https://phar.phpunit.de/phploc.phar \
     && chmod +x /usr/local/bin/phploc
-wget -O /usr/local/bin/phpchck https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64 \
+wget --no-check-certificate -O /usr/local/bin/phpchck https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64 \
     && chmod +x /usr/local/bin/phpchck
 
 echo "INSTALLING NODEJS PACKAGES..."

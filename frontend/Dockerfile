@@ -45,14 +45,14 @@ RUN set -eux; \
         libpq-dev; \
 # DOWNLOADING SOURCES...
     echo "${BLU}DOWNLOADING SOURCES...${RES}"; \
-    wget -O /tmp/nginx-${NGINX_VERSION}.tar.gz https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz; \
-    wget -O /tmp/nginx-module-ngx-${NGINX_MODULE_NGX_VERSION}.tar.gz https://github.com/vision5/ngx_devel_kit/archive/v${NGINX_MODULE_NGX_VERSION}.tar.gz; \
-    wget -O /tmp/nginx-module-lua-${NGINX_MODULE_LUA_VERSION}.tar.gz https://github.com/openresty/lua-nginx-module/archive/v${NGINX_MODULE_LUA_VERSION}.tar.gz; \
-    wget -O /tmp/nginx-module-njs-${NGINX_MODULE_NJS_VERSION}.tar.gz https://github.com/nginx/njs/archive/${NGINX_MODULE_NJS_VERSION}.tar.gz; \
-    wget -O /tmp/nginx-module-geo-${NGINX_MODULE_GEO_VERSION}.tar.gz https://github.com/leev/ngx_http_geoip2_module/archive/${NGINX_MODULE_GEO_VERSION}.tar.gz; \
-    wget -O /tmp/nginx-module-rtmp-${NGINX_MODULE_RTMP_VERSION}.tar.gz https://github.com/arut/nginx-rtmp-module/archive/v${NGINX_MODULE_RTMP_VERSION}.tar.gz; \
-    wget -O /tmp/luajit-${LUAJIT_MAJOR_VERSION}.${LUAJIT_MINOR_VERSION}-${LUAJIT_RELEASE_VERSION}.tar.gz https://github.com/openresty/luajit2/archive/v${LUAJIT_MAJOR_VERSION}.${LUAJIT_MINOR_VERSION}-${LUAJIT_RELEASE_VERSION}.tar.gz; \
-    wget -O /tmp/openresty-${OPENRESTY_VERSION}.tar.gz https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/nginx-${NGINX_VERSION}.tar.gz https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/nginx-module-ngx-${NGINX_MODULE_NGX_VERSION}.tar.gz https://github.com/vision5/ngx_devel_kit/archive/v${NGINX_MODULE_NGX_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/nginx-module-lua-${NGINX_MODULE_LUA_VERSION}.tar.gz https://github.com/openresty/lua-nginx-module/archive/v${NGINX_MODULE_LUA_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/nginx-module-njs-${NGINX_MODULE_NJS_VERSION}.tar.gz https://github.com/nginx/njs/archive/${NGINX_MODULE_NJS_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/nginx-module-geo-${NGINX_MODULE_GEO_VERSION}.tar.gz https://github.com/leev/ngx_http_geoip2_module/archive/${NGINX_MODULE_GEO_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/nginx-module-rtmp-${NGINX_MODULE_RTMP_VERSION}.tar.gz https://github.com/arut/nginx-rtmp-module/archive/v${NGINX_MODULE_RTMP_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/luajit-${LUAJIT_MAJOR_VERSION}.${LUAJIT_MINOR_VERSION}-${LUAJIT_RELEASE_VERSION}.tar.gz https://github.com/openresty/luajit2/archive/v${LUAJIT_MAJOR_VERSION}.${LUAJIT_MINOR_VERSION}-${LUAJIT_RELEASE_VERSION}.tar.gz; \
+    wget --no-check-certificate -O /tmp/openresty-${OPENRESTY_VERSION}.tar.gz https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz; \
 # UNPACKING SOURCES...
     echo "${BLU}UNPACKING SOURCES...${RES}"; \
     tar -zxf /tmp/nginx-${NGINX_VERSION}.tar.gz -C /tmp; \
