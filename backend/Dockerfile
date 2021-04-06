@@ -272,7 +272,9 @@ RUN set -eux; \
         --enable-openssl \
         --enable-http2 \
         --enable-swoole \
-        --enable-mysqlnd; \
+        --enable-mysqlnd \
+        --enable-swoole-json \
+        --enable-swoole-curl; \
     make -j$(nproc); \
     make install; \
     echo 'extension=swoole' > /etc/php/conf.d/php-ext-swoole.ini; \
