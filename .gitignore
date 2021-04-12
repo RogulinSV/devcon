@@ -1,2 +1,4 @@
 www/.idea/
+www/node_modules/
+www/vendor/
 log/**/*.log
