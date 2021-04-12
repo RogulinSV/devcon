@@ -411,7 +411,7 @@ RUN set -eux; \
     chmod 755 /start.sh; \
     chmod 755 /prefix.sh
 
-EXPOSE 8025 9002
+EXPOSE 3000 5000 8025 9002
 VOLUME /var/mailhog
 VOLUME /var/www
 VOLUME /var/log/php

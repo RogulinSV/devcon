@@ -31,6 +31,8 @@ services:
             - ./log/php:/var/log/php
             - ./log/node:/var/log/node
         ports:
+            - 3000:3000
+            - 5000:5000
             - 8025:8025
             - 9002:9002
         networks:
