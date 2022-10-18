@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env /bin/bash
 
 if [ -f "/var/www/composer.json" ]; then
     echo "INSTALLING COMPOSER DEPENDENCIES..."

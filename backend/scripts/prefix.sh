@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env /bin/bash
 
 BGRESET='\e[49m'
 declare -A BGCOLORS=(

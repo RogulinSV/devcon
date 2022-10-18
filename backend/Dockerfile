@@ -5,7 +5,7 @@ ARG RES='\n\e[49m'
 
 ARG PHP_VERSION=8.1.11
 ARG PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
-ARG PHP_CPPFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+ARG PHP_CPPFLAGS=$PHP_CFLAGS
 ARG PHP_LDFLAGS="-Wl,-O1 -pie"
 ARG PHP_EXTENSION_IGBINARY_VERSION=3.2.9
 ARG PHP_EXTENSION_XDEBUG_VERSION=3.1.5
@@ -22,7 +22,7 @@ ARG PHP_EXTENSION_AMQP_BRANCH=v1.11.0
 ARG ORACLE_CLIENT_MAJOR_VERSION=21
 ARG ORACLE_CLIENT_MINOR_VERSION=7
 ARG ORACLE_CLIENT_BRANCH=217000
-ARG ORACLE_CLIENT_VERSION=x64-21.7.0.0.0
+ARG ORACLE_CLIENT_VERSION="x64-21.7.0.0.0dbru"
 ARG ORACLE_NLS_LANG=American_America.CL8MSWIN1251
 ARG NODE_VERSION=18.11.0
 ARG MOZJPEG_VERSION=4.1.1
@@ -30,6 +30,36 @@ ARG GIFSICLE_VERSION=1.93
 ARG MAILHOG_VERSION=1.0.1
 ARG MAILHOG_STORAGE="maildir"
 # ARG MAILHOG_STORAGE="memory"
+ARG PHP_DEPS=' \
+    ghostscript \
+    libaio1 \
+    libzip-dev \
+    libargon2-dev \
+    libcurl4-openssl-dev \
+    libedit-dev \
+    libc-client-dev \
+    libldb-dev \
+    libldap2-dev \
+    libsodium-dev \
+    libsqlite3-dev \
+    libxml2-dev \
+    libkrb5-dev \
+    libbz2-dev \
+    libffi-dev \
+    libgmp-dev \
+    libwebp-dev \
+    libpng-dev \
+    libonig-dev \
+    libreadline-dev \
+    libtidy-dev \
+    libmagickwand-dev \
+    libmemcached-dev \
+    libgs-dev \
+    libyaml-dev \
+    librabbitmq-dev \
+    libxslt-dev \
+    libpq-dev \
+'
 
 ENV PATH /usr/lib/oracle/instantclient_${ORACLE_CLIENT_MAJOR_VERSION}_${ORACLE_CLIENT_MINOR_VERSION}:${PATH}
 ENV ORACLE_HOME /usr/lib/oracle/instantclient_${ORACLE_CLIENT_MAJOR_VERSION}_${ORACLE_CLIENT_MINOR_VERSION}
@@ -71,36 +101,11 @@ RUN set -eux; \
         file \
         nasm \
 # PHP DEPENDENCIES...
-        ghostscript \
-        libaio1 \
-        libzip-dev \
-        libargon2-dev \
-        libcurl4-openssl-dev \
-        libedit-dev \
-        libc-client-dev \
-        libldb-dev \
-        libldap2-dev \
-        libsodium-dev \
-        libsqlite3-dev \
-        libxml2-dev \
-        libkrb5-dev \
-        libbz2-dev \
-        libffi-dev \
-        libgmp-dev \
-        libwebp-dev \
-        libpng-dev \
-        libonig-dev \
-        libreadline-dev \
-        libtidy-dev \
-        libmagickwand-dev \
-        libmemcached-dev \
-        libgs-dev \
-        libyaml-dev \
-        librabbitmq-dev \
-# >> NGINX
-        libxslt-dev \
-        libpq-dev; \
+        ${PHP_DEPS}; \
+    apt-mark manual \
+        ${PHP_DEPS};
 # DOWNLOADING SOURCES...
+RUN set -eux; \
     echo "${BLU}DOWNLOADING SOURCES...${RES}"; \
     wget -O /tmp/php-${PHP_VERSION}.tar.gz https://www.php.net/distributions/php-${PHP_VERSION}.tar.gz; \
     wget -O /tmp/instantclient-basic-linux.${ORACLE_CLIENT_VERSION}.zip https://download.oracle.com/otn_software/linux/instantclient/${ORACLE_CLIENT_BRANCH}/instantclient-basic-linux.${ORACLE_CLIENT_VERSION}.zip; \
@@ -126,14 +131,17 @@ RUN set -eux; \
     unzip /tmp/instantclient-odbc-linux.${ORACLE_CLIENT_VERSION}.zip -d /usr/lib/oracle; \
     tar -zxf /tmp/node-${NODE_VERSION}.tar.gz -C /tmp; \
     tar -zxf /tmp/mozjpeg-${MOZJPEG_VERSION}.tar.gz -C /tmp; \
-    tar -zxf /tmp/gifsicle-${GIFSICLE_VERSION}.tar.gz -C /tmp; \
+    tar -zxf /tmp/gifsicle-${GIFSICLE_VERSION}.tar.gz -C /tmp;
 # COMPILING PHP...
+RUN set -eux; \
     echo "${BLU}COMPILING PHP...${RES}"; \
     ln -s /usr/lib/libc-client.a /usr/lib/x86_64-linux-gnu/libc-client.a; \
-    ln -s /usr/lib/libc-client.so /usr/lib/x86_64-linux-gnu/libc-client.so; \
+    ln -s /usr/lib/libc-client.so /usr/lib/x86_64-linux-gnu/libc-client.so;
+RUN set -eux; \
     cd /tmp/php-${PHP_VERSION}; \
-    CFLAGS=${PHP_CFLAGS} CPPFLAGS=${PHP_CPPFLAGS} LDFLAGS=${PHP_LDFLAGS} ./configure \
+    CFLAGS="${PHP_CFLAGS}" CPPFLAGS="${PHP_CPPFLAGS}" LDFLAGS="${PHP_LDFLAGS}" ./configure \
         --prefix=/usr \
+        --enable-option-checking=fatal \
         --with-config-file-path=/etc/php \
         --with-config-file-scan-dir=/etc/php/conf.d \
         --with-fpm-group=www-data \
@@ -141,11 +149,11 @@ RUN set -eux; \
         --enable-fpm \
         --disable-cgi \
         --disable-rpath \
+        --disable-phpdbg \
         --enable-bcmath \
         --enable-calendar \
         --enable-exif \
         --enable-gd \
-        --enable-inline-optimization \
         --enable-intl \
         --enable-mbregex \
         --enable-mbstring \
@@ -169,6 +177,7 @@ RUN set -eux; \
         --with-ldap \
         --with-libdir=lib/x86_64-linux-gnu \
         --with-mhash \
+        --with-pic \
         --with-mysql-sock=/var/run/mysqld/mysqld.sock \
         --with-mysqli \
         --with-openssl \
@@ -184,14 +193,17 @@ RUN set -eux; \
         --with-sqlite3=/usr \
         --with-tidy \
         --with-webp \
-        --with-xmlrpc \
         --with-xsl \
         --with-zip \
         --with-zlib \
         --with-zlib-dir; \
     make -j$(nproc); \
+    find -type f -name '*.a' -delete; \
     make install; \
+    find /usr/local -type f -perm '/0111' -exec sh -euxc 'strip --strip-all "$@" || :' -- '{}' + ; \
+    make clean;
 # COMPILING PHP EXTENSIONS...
+RUN set -eux; \
     echo "${BLU}COMPILING PHP EXTENSIONS...${RES}"; \
     mkdir -p /etc/php/conf.d/; \
     cd /tmp/php-${PHP_VERSION}/ext/oci8; \
@@ -321,8 +333,9 @@ RUN set -eux; \
     php /tmp/composer-installer.php --install-dir=/usr/local/bin --filename=composer; \
 # SMOKE TEST
     echo "${BLU}CHECKING COMPOSER...${RES}"; \
-    composer --version; \
+    composer --version;
 # COMPILING NODEJS...
+RUN set -eux; \
     echo "${BLU}COMPILING NODEJS...${RES}"; \
     addgroup --system --gid 1000 node; \
     adduser --system --disabled-login --ingroup node --no-create-home --home /nonexistent --gecos "node user" --shell /bin/false --uid 1000 node; \
@@ -341,8 +354,9 @@ RUN set -eux; \
     echo "${BLU}CHECKING NODEJS...${RES}"; \
     node --version; \
     npm --version; \
-    npx --version; \
-# COMPILING MOJZPEG...    
+    npx --version;
+# COMPILING MOJZPEG...
+RUN set -eux; \    
     echo "${BLU}COMPILING MOJZPEG...${RES}"; \
     cd /tmp/mozjpeg-${MOZJPEG_VERSION}; \
     mkdir build; \
@@ -374,8 +388,9 @@ RUN set -eux; \
     mkdir ${MH_MAILDIR_PATH}; \
     chown mailhog:mailhog ${MH_MAILDIR_PATH}; \
     mv /tmp/mailhog /usr/local/bin/mailhog; \
-    chmod +x /usr/local/bin/mailhog; \
+    chmod +x /usr/local/bin/mailhog;
 # CLEANUP
+RUN set -eux; \
     echo "${BLU}REMOVING PACKAGES...${RES}"; \
     apt-get remove --purge -y \
         git \
@@ -387,6 +402,8 @@ RUN set -eux; \
         dpkg-dev \
         file \
         nasm; \
+    find /usr/local -type f -executable -or -name \*.so -exec ldd '{}' ';' | awk '/=>/ { print $(NF-1) }' | sort -u | xargs -r dpkg-query --search | cut -d: -f1 | sort -u | xargs -r apt-mark manual; \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
     pecl clear-cache; \
     npm cache clean --force; \
     rm -rf /tmp/*;
