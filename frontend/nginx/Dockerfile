@@ -1,31 +1,35 @@
 FROM debian:buster-slim
 
-ARG BLU='\e[44m\n\n'
-ARG RES='\n\e[49m'
+LABEL org.opencontainers.image.authors="sv.rogulin@gmail.com"
 
-ARG NGINX_VERSION=1.19.8
+ARG NGINX_VERSION=1.22.0
 ARG NGINX_MODULE_NGX_VERSION=0.3.1
-ARG NGINX_MODULE_LUA_VERSION=0.10.19
-ARG NGINX_MODULE_NJS_VERSION=0.5.2
-ARG NGINX_MODULE_GEO_VERSION=3.3
-ARG NGINX_MODULE_RTMP_VERSION=1.2.1
+ARG NGINX_MODULE_LUA_VERSION=0.10.21
+ARG NGINX_MODULE_NJS_VERSION=0.7.7
+ARG NGINX_MODULE_GEO_VERSION=3.4
+ARG NGINX_MODULE_RTMP_VERSION=1.2.2
 ARG LUA_VERSION=5.1
 ARG LUAJIT_MAJOR_VERSION=2
 ARG LUAJIT_MINOR_VERSION=1
-ARG LUAJIT_RELEASE_VERSION=20201229
-ARG OPENRESTY_VERSION=1.19.3.1
+ARG LUAJIT_RELEASE_VERSION=20220915
+ARG OPENRESTY_VERSION=1.21.4.1
 ARG OPENRESTY_MODULE_HEADERS_VERSION=0.33
 ARG OPENRESTY_MODULE_ICONV_VERSION=0.14
 ARG OPENRESTY_MODULE_POSTGRES_VERSION=1.0
 ARG OPENRESTY_MODULE_REDIS2_VERSION=0.15
-ARG OPENRESTY_MODULE_SETMISC_VERSION=0.32
+ARG OPENRESTY_MODULE_SETMISC_VERSION=0.33
+
+ENV http_proxy=${SECURITY_HTTP_PROXY:-}
+ENV https_proxy=${SECURITY_HTTPS_PROXY:-}
 
 # INSTALLING PACKAGES...
 RUN set -eux; \
-    echo "${BLU}INSTALLING PACKAGES...${RES}"; \
+    echo "INSTALLING PACKAGES..."; \
     apt-get update; \
     apt-get install --no-install-recommends --no-install-suggests -y \
 # UTILS...
+        locales \
+        tzdata \
         wget \
         ca-certificates \
         supervisor \
@@ -43,8 +47,16 @@ RUN set -eux; \
         libmaxminddb-dev \
         libgeoip-dev \
         libpq-dev; \
+# CONFIGURING TIMEZONE AND LOCALE...
+    echo "CONFIGURING TIMEZONE AND LOCALE..."; \
+    locale-gen ru_RU.UTF-8 en_US.UTF-8; \
+    touch /etc/tzdata-selection.txt; \
+    echo 'tzdata tzdata/Areas select Europe' >> /etc/tzdata-selection.txt; \
+    echo 'tzdata tzdata/Zones/Europe select Moscow' >> /etc/tzdata-selection.txt; \
+    debconf-set-selections /etc/tzdata-selection.txt; \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure tzdata; \
 # DOWNLOADING SOURCES...
-    echo "${BLU}DOWNLOADING SOURCES...${RES}"; \
+    echo "DOWNLOADING SOURCES..."; \
     wget -O /tmp/nginx-${NGINX_VERSION}.tar.gz https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz; \
     wget -O /tmp/nginx-module-ngx-${NGINX_MODULE_NGX_VERSION}.tar.gz https://github.com/vision5/ngx_devel_kit/archive/v${NGINX_MODULE_NGX_VERSION}.tar.gz; \
     wget -O /tmp/nginx-module-lua-${NGINX_MODULE_LUA_VERSION}.tar.gz https://github.com/openresty/lua-nginx-module/archive/v${NGINX_MODULE_LUA_VERSION}.tar.gz; \
@@ -54,7 +66,7 @@ RUN set -eux; \
     wget -O /tmp/luajit-${LUAJIT_MAJOR_VERSION}.${LUAJIT_MINOR_VERSION}-${LUAJIT_RELEASE_VERSION}.tar.gz https://github.com/openresty/luajit2/archive/v${LUAJIT_MAJOR_VERSION}.${LUAJIT_MINOR_VERSION}-${LUAJIT_RELEASE_VERSION}.tar.gz; \
     wget -O /tmp/openresty-${OPENRESTY_VERSION}.tar.gz https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz; \
 # UNPACKING SOURCES...
-    echo "${BLU}UNPACKING SOURCES...${RES}"; \
+    echo "UNPACKING SOURCES..."; \
     tar -zxf /tmp/nginx-${NGINX_VERSION}.tar.gz -C /tmp; \
     tar -zxf /tmp/nginx-module-ngx-${NGINX_MODULE_NGX_VERSION}.tar.gz -C /tmp; \
     tar -zxf /tmp/nginx-module-lua-${NGINX_MODULE_LUA_VERSION}.tar.gz -C /tmp; \
@@ -64,12 +76,13 @@ RUN set -eux; \
     tar -zxf /tmp/luajit-${LUAJIT_MAJOR_VERSION}.${LUAJIT_MINOR_VERSION}-${LUAJIT_RELEASE_VERSION}.tar.gz -C /tmp; \
     tar -zxf /tmp/openresty-${OPENRESTY_VERSION}.tar.gz -C /tmp; \
 # COMPILING LUAJIT...
-    echo "${BLU}COMPILING LUAJIT...${RES}"; \
+    echo "COMPILING LUAJIT..."; \
     cd /tmp/luajit${LUAJIT_MAJOR_VERSION}-${LUAJIT_MAJOR_VERSION}.${LUAJIT_MINOR_VERSION}-${LUAJIT_RELEASE_VERSION}; \
     make -j$(nproc); \
     make install; \
+    make clean; \
 # COMPILING NGINX...
-    echo "${BLU}COMPILING NGINX...${RES}"; \
+    echo "COMPILING NGINX..."; \
     addgroup --system --gid 199 nginx; \
     adduser --system --disabled-login --ingroup nginx --no-create-home --home /nonexistent --gecos "nginx user" --shell /bin/false --uid 199 nginx; \
     cd /tmp/nginx-${NGINX_VERSION}; \
@@ -135,7 +148,7 @@ RUN set -eux; \
     make -j$(nproc); \
     make install; \
 # CONFIGURING NGINX...
-    echo "${BLU}CONFIGURING NGINX...${RES}"; \
+    echo "CONFIGURING NGINX..."; \
     rm -rf /etc/nginx/html; \
     mkdir /etc/nginx/conf.d; \
     mkdir /etc/nginx/sites-available; \
@@ -154,13 +167,12 @@ RUN set -eux; \
     mkdir -p /var/log/nginx; \
     chown nginx:nginx /var/log/nginx; \
 # SMOKE TEST
-    echo "${BLU}CHECKING NGINX...${RES}"; \
+    echo "CHECKING NGINX..."; \
     nginx -v; \
 # CLEANUP
-    echo "${BLU}REMOVING PACKAGES...${RES}"; \
+    echo "REMOVING PACKAGES..."; \
     apt-get remove --purge -y \
         wget \
-        ca-certificates \
         g++ \
         gcc \
         make; \
@@ -168,23 +180,20 @@ RUN set -eux; \
 
 COPY config/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY config/nginx/sites-available/default.conf /etc/nginx/sites-available/default.conf
-COPY config/supervisord.conf /etc/supervisord.conf
+COPY config/supervisord/supervisord.conf /etc/supervisord.conf
 COPY scripts/start.sh /start.sh
 COPY scripts/prefix.sh /prefix.sh
 
-# CONFIGURING SUPERVISOR...
-RUN set -eux; \
-    echo "${BLU}CONFIGURING SUPERVISOR...${RES}"; \
-    mkdir -p /etc/supervisor/conf.d/; \
 # CONFIGURING NGINX...
-    echo "${BLU}CONFIGURING NGINX...${RES}"; \
+RUN set -eux; \
+    echo "CONFIGURING NGINX..."; \
     ln -s /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/default.conf; \
 # CONFIGURING STARTUP SCRIPTS...
-    echo "${BLU}CONFIGURING STARTUP SCRIPTS...${RES}"; \
+    echo "CONFIGURING STARTUP SCRIPTS..."; \
     chmod 755 /start.sh; \
     chmod 755 /prefix.sh;
 
-EXPOSE 80 443 9001
+EXPOSE 80 443 9010
 VOLUME /var/www
 VOLUME /var/log/nginx
 
