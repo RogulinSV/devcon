@@ -6,6 +6,7 @@ ARG PHP_VERSION=8.1.11
 ARG PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
 ARG PHP_CPPFLAGS=$PHP_CFLAGS
 ARG PHP_LDFLAGS="-Wl,-O1 -pie"
+ARG PHP_EXTENSION_APCU_VERSION=5.1.22
 ARG PHP_EXTENSION_IGBINARY_VERSION=3.2.9
 ARG PHP_EXTENSION_XDEBUG_VERSION=3.1.5
 ARG PHP_EXTENSION_XDEBUG_PORT=9003
@@ -279,6 +280,8 @@ RUN set -eux; \
     make install; \
     echo 'extension=pdo_oci' > /etc/php/conf.d/php-ext-pdo-oci.ini; \
     pecl channel-update pecl.php.net; \
+    pecl install apcu-${PHP_EXTENSION_APCU_VERSION}; \
+    echo 'extension=apcu' > /etc/php/conf.d/php-ext-apcu.ini; \
     pecl install igbinary-${PHP_EXTENSION_IGBINARY_VERSION}; \
     echo 'extension=igbinary' > /etc/php/conf.d/php-ext-igbinary.ini; \
     pecl install xdebug-${PHP_EXTENSION_XDEBUG_VERSION}; \
@@ -364,16 +367,6 @@ RUN set -eux; \
     { \
         echo 'sendmail_path=/usr/bin/msmtp -t'; \
     } > /etc/php/conf.d/php-ext-sendmail.ini; \
-    { \
-        echo; \
-        echo 'xdebug.mode=debug'; \
-        echo 'xdebug.client_host=host.docker.internal'; \
-        echo "xdebug.client_port=${PHP_EXTENSION_XDEBUG_PORT}"; \
-        echo 'xdebug.log=/var/log/php/xdebug.log'; \
-        echo "xdebug.log_level=${PHP_EXTENSION_XDEBUG_LOG_LEVEL}"; \
-        echo 'xdebug.output_dir=/var/log/php/cachegrind'; \
-        echo 'xdebug.profiler_output_name=cachegrind.out.%s'; \
-    } >> /etc/php/conf.d/php-ext-xdebug.ini; \
     mkdir -p /var/log/php; \
     touch /var/log/php/access.log; \
     chown www-data:www-data /var/log/php/access.log; \
@@ -399,10 +392,8 @@ RUN set -eux; \
     pecl clear-cache; \
     rm ~/.pearrc; \
     rm -rf /usr/src/php; \
-    rm -rf /tmp/*;
-
+    rm -rf /tmp/*; \
 # SYSTEM CLEANUP...
-RUN set -eux; \
     echo "SYSTEM CLEANUP..."; \
     apt-get remove --purge -y \
         git \
@@ -417,11 +408,6 @@ RUN set -eux; \
     # find /usr/local -type f -executable -or -name \*.so -exec ldd '{}' ';' | awk '/=>/ { print $(NF-1) }' | sort -u | xargs -r dpkg-query --search | cut -d: -f1 | sort -u | xargs -r apt-mark manual; \
     # apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
 
-COPY config/php/php.ini /etc/php/php.ini
-COPY config/php/php-fpm.conf /usr/etc/php-fpm.conf
-COPY config/php/php-fpm.d/* /etc/php/php-fpm.d/
-COPY config/php/conf.d/* /etc/php/conf.d/
-COPY config/msmtprc /etc/msmtprc
 COPY config/supervisord/supervisord.conf /etc/supervisord.conf
 COPY scripts/start.sh /start.sh
 COPY scripts/prefix.sh /prefix.sh

@@ -75,10 +75,8 @@ RUN set -eux; \
 # CLEANUP
     echo "REMOVING PACKAGES..."; \
     npm cache clean --force; \
-    rm -rf /tmp/*;
-
+    rm -rf /tmp/*; \
 # SYSTEM CLEANUP...
-RUN set -eux; \
     echo "SYSTEM CLEANUP..."; \
     apt-get remove --purge -y \
         python3 \

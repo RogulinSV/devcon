@@ -178,17 +178,12 @@ RUN set -eux; \
         make; \
     rm -rf /tmp/*;
 
-COPY config/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY config/nginx/sites-available/default.conf /etc/nginx/sites-available/default.conf
 COPY config/supervisord/supervisord.conf /etc/supervisord.conf
 COPY scripts/start.sh /start.sh
 COPY scripts/prefix.sh /prefix.sh
 
-# CONFIGURING NGINX...
-RUN set -eux; \
-    echo "CONFIGURING NGINX..."; \
-    ln -s /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/default.conf; \
 # CONFIGURING STARTUP SCRIPTS...
+RUN set -eux; \
     echo "CONFIGURING STARTUP SCRIPTS..."; \
     chmod 755 /start.sh; \
     chmod 755 /prefix.sh;
