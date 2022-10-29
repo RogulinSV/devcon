@@ -11,6 +11,7 @@ services:
         volumes:
             - ./www:/var/www
             - ./log/nginx:/var/log/nginx
+            - ./frontend/nginx/config/nginx:/opt/config/nginx:ro
         ports:
             - 8080:80   # http
             - 8443:443  # https
@@ -31,7 +32,9 @@ services:
         volumes:
             - ./www:/var/www
             - ./log/php:/var/log/php
-            - ./cache/mailhog:/var/mailhog
+            - ./data/mailhog:/var/mailhog
+            - ./backend/php/config/msmtprc:/opt/config/msmtprc:ro
+            - ./backend/php/config/php:/opt/config/php:ro
         ports:
             - 8025:8025 # mailhog
             - 9003:9003 # xdebug
@@ -66,6 +69,7 @@ services:
             - pass
         volumes:
             - ./data/postgres:/var/lib/postgresql/data
+            - ./log/redis:/var/log/redis
         networks:
             - circle-9
     redis:
