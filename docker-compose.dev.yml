@@ -1,0 +1,90 @@
+version: '3.9'
+
+networks:
+    circle-9:
+
+services:
+    nginx:
+        build:
+            context: ./frontend/nginx
+        container_name: nginx
+        volumes:
+            - ./www:/var/www
+            - ./log/nginx:/var/log/nginx
+            - ./frontend/nginx/config/nginx:/opt/config/nginx:ro
+        ports:
+            - 8080:80   # http
+            - 8443:443  # https
+            - 9010:9010 # supervisor
+        links:
+            - php
+            - node
+        networks:
+            - circle-9
+    php:
+        build:
+            context: ./backend/php
+            target: debug
+            args:
+                PHP_MODE: "FPM-CLI"
+        container_name: php
+        environment:
+            XDEBUG_CONFIG: "client_host=host.docker.internal client_port=9003 idekey=PHPSTORM"
+        cap_add:
+            - "SYS_PTRACE"
+        volumes:
+            - ./www:/var/www
+            - ./log/php:/var/log/php
+            - ./data/mailhog:/var/mailhog
+            - ./backend/php/config/msmtprc:/opt/config/msmtprc:ro
+            - ./backend/php/config/php:/opt/config/php:ro
+            - ./backend/php/config/crontab:/opt/config/crontab:ro
+        ports:
+            - 8025:8025 # mailhog
+            - 9003:9003 # xdebug
+            - 9012:9012 # supervisor
+        links:
+            - postgres
+            - redis
+        networks:
+            - circle-9
+    node:
+        build:
+            context: ./backend/node
+        container_name: node
+        volumes:
+            - ./www:/var/www
+            - ./log/node:/var/log/node
+        ports:
+            - 3000:3000 # node
+            - 5000:5000 # node
+            - 9013:9013 # supervisor
+        networks:
+            - circle-9
+    postgres:
+        build:
+            context: ./database/postgres
+        container_name: postgres
+        environment:
+            POSTGRES_DB: ${POSTGRES_DB:-app}
+            POSTGRES_PASSWORD_FILE: /run/secrets/pass
+            POSTGRES_USER: ${POSTGRES_USER:-user}
+        secrets:
+            - pass
+        volumes:
+            - ./data/postgres:/var/lib/postgresql/data
+            - ./log/redis:/var/log/redis
+        networks:
+            - circle-9
+    redis:
+        build:
+            context: ./database/redis
+        container_name: redis
+        volumes:
+            - ./data/redis:/data
+        networks:
+            - circle-9
+
+secrets:
+    pass:
+        file: secrets/postgres/pass.txt

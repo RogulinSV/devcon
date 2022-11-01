@@ -47,14 +47,6 @@ RUN set -eux; \
         libmaxminddb-dev \
         libgeoip-dev \
         libpq-dev; \
-# CONFIGURING TIMEZONE AND LOCALE...
-    echo "CONFIGURING TIMEZONE AND LOCALE..."; \
-    locale-gen ru_RU.UTF-8 en_US.UTF-8; \
-    touch /etc/tzdata-selection.txt; \
-    echo 'tzdata tzdata/Areas select Europe' >> /etc/tzdata-selection.txt; \
-    echo 'tzdata tzdata/Zones/Europe select Moscow' >> /etc/tzdata-selection.txt; \
-    debconf-set-selections /etc/tzdata-selection.txt; \
-    DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure tzdata; \
 # DOWNLOADING SOURCES...
     echo "DOWNLOADING SOURCES..."; \
     wget -O /tmp/nginx-${NGINX_VERSION}.tar.gz https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz; \
@@ -178,15 +170,20 @@ RUN set -eux; \
         make; \
     rm -rf /tmp/*;
 
+# CONFIGURING TIMEZONE AND LOCALE...
+RUN set -eux; \
+    echo "CONFIGURING TIMEZONE AND LOCALE..."; \
+    locale-gen ru_RU.UTF-8 en_US.UTF-8; \
+    touch /etc/tzdata-selection.txt; \
+    echo 'tzdata tzdata/Areas select Europe' >> /etc/tzdata-selection.txt; \
+    echo 'tzdata tzdata/Zones/Europe select Moscow' >> /etc/tzdata-selection.txt; \
+    debconf-set-selections /etc/tzdata-selection.txt; \
+    rm /etc/localtime /etc/timezone; \
+    DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg-reconfigure tzdata;
+
 COPY config/supervisord/supervisord.conf /etc/supervisord.conf
 COPY scripts/start.sh /start.sh
 COPY scripts/prefix.sh /prefix.sh
-
-# CONFIGURING STARTUP SCRIPTS...
-RUN set -eux; \
-    echo "CONFIGURING STARTUP SCRIPTS..."; \
-    chmod 755 /start.sh; \
-    chmod 755 /prefix.sh;
 
 EXPOSE 80 443 9010
 VOLUME /var/www
