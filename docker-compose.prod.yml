@@ -1,0 +1,75 @@
+version: '3.9'
+
+networks:
+    circle-9:
+
+services:
+    nginx:
+        build:
+            context: ./frontend/nginx
+        container_name: nginx
+        volumes:
+            - ./www:/var/www
+            - ./log/nginx:/var/log/nginx
+            - ./frontend/nginx/config/nginx:/opt/config/nginx:ro
+        ports:
+            - 8080:80   # http
+            - 8443:443  # https
+            - 9010:9010 # supervisor
+        links:
+            - php-fpm
+            - node
+        networks:
+            - circle-9
+    php-fpm:
+        build:
+            context: ./backend/php
+            target: fpm
+            args:
+                PHP_MODE: "FPM"
+        container_name: php-fpm
+        cap_add:
+            - "SYS_PTRACE"
+        volumes:
+            - ./www:/var/www
+            - ./log/php:/var/log/php
+            - ./backend/php/config/php:/opt/config/php:ro
+        ports:
+            - 9011:9011 # supervisor
+        networks:
+            - circle-9
+    php-cli:
+        build:
+            context: ./backend/php
+            target: cli
+            args:
+                PHP_MODE: "CLI"
+        container_name: php-cli
+        cap_add:
+            - "SYS_PTRACE"
+        volumes:
+            - ./www:/var/www
+            - ./log/php:/var/log/php
+            - ./backend/php/config/php:/opt/config/php:ro
+            - ./backend/php/config/crontab:/opt/config/crontab:ro
+        ports:
+            - 9012:9012 # supervisor
+        networks:
+            - circle-9
+    node:
+        build:
+            context: ./backend/node
+        container_name: node
+        volumes:
+            - ./www:/var/www
+            - ./log/node:/var/log/node
+        ports:
+            - 3000:3000 # node
+            - 5000:5000 # node
+            - 9013:9013 # supervisor
+        networks:
+            - circle-9
+
+secrets:
+    pass:
+        file: secrets/postgres/pass.txt
