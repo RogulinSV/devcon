@@ -2,7 +2,8 @@ www/.idea/
 www/node_modules/
 www/vendor/
 log/**/*.log
+data/mailhog/**
 data/postgres/**
 data/redis/**
-secrets/**
+secrets/postgres/**
 !**/.gitkeep
